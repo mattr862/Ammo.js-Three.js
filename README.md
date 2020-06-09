@@ -1,5 +1,5 @@
 # Ammo.js-Three.js
-A list of resources for working with Ammo.js and Three.js developed for Queen's University QLAB.
+A list of resources for working with Ammo.js and Three.js developed for Queen's University QLAB project with the aim of creating a simulation of a robotic arm.
 
 All the code for the guides is outlined within them can be found in the folders.
 
