@@ -12,26 +12,29 @@
         <script>
 
             //variable declaration
-            let physicsWorld, scene, camera, renderer, rigidBodies = []
-            let Cylinder = null
-            const STATE = { DISABLE_DEACTIVATION : 4 }
-            
+            let physicsWorld, scene, camera, renderer, rigidBodies = [], tmpTrans = null
+            let Cylinder = null // global declaration of moving part
+            const STATE = { DISABLE_DEACTIVATION : 4 } // enables dynamic motion
+            let boxBody = null, cylinderBody = null, boxPivot = null, cylinderPivot = null // global declaration of joint data
             //Ammojs Initialization
+            let moveDirection = { up: 0, down: 0 } // used to store button presses
+            
             Ammo().then( start )
             
-            function start()
+            function start() // main loop used to call functions
             {
                   //code goes here
                   tmpTrans = new Ammo.btTransform();
                   setupPhysicsWorld();
-                  setupGraphics();
+                  setupGrahics();
                   createBlock();
                   createBox();
                   createCylinder();
+                  setupEventHandlers();
                   renderFrame();
             }
         
-            function setupPhysicsWorld()
+            function setupPhysicsWorld() // sets up physics world
             {
                     let collisionConfiguration  = new Ammo.btDefaultCollisionConfiguration(),
                         dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration),
@@ -42,7 +45,7 @@
                     physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
             }
             
-            function setupGraphics()
+            function setupGraphics() // sets up the visuals
             {
                 //create clock for timing
                 clock = new THREE.Clock();
@@ -95,15 +98,52 @@
                 renderer.shadowMap.enabled = true;
             }
                                                      
-            function renderFrame()
+            function renderFrame() // refreshes visuals
             {
                 let deltaTime = clock.getDelta();
+                moveCylinder();
                 updatePhysics( deltaTime );
                 renderer.render( scene, camera );
                 requestAnimationFrame( renderFrame );
             }
+            
+            function setupEventHandlers() // calls keyboard input checks
+            {
+                window.addEventListener( 'keydown', handleKeyDown, false);
+                window.addEventListener( 'keyup', handleKeyUp, false);
+            }
+
+            function handleKeyDown(event) // checks if button is pressed
+            {
+                let keyCode = event.keyCode;
+                switch(keyCode)
+                {
+                    case 38: //↑: up arrow
+                    moveDirection.up = 1
+                       break;
+                       
+                    case 40: //↓: down arrow
+                    moveDirection.down = 1
+                       break;
+                }
+            }
+
+            function handleKeyUp(event) // checks if button is released
+            {
+                let keyCode = event.keyCode;
+
+                switch(keyCode){
+                    case 38: //↑: up arrow
+                    moveDirection.up = 0
+                       break;
+                       
+                    case 40: //↓: down arrow
+                    moveDirection.down = 0
+                       break;
+                }
+            }
                                                      
-            function createBlock()
+            function createBlock() // creates the floor
             {
                 let pos = {x: 0, y: 0, z: 0};
                 let scale = {x: 50, y: 2, z: 50};
@@ -139,10 +179,9 @@
                 let body = new Ammo.btRigidBody( rbInfo );
 
                 physicsWorld.addRigidBody( body );
-                
             }
                                 
-            function createBox()
+            function createBox() // creates motor box
             {
                 let pos = {x: 0, y: 3, z: 0};
                 let scale = {x: 5, y: 5, z: 5};
@@ -175,13 +214,15 @@
                 colShape.calculateLocalInertia( mass, localInertia );
 
                 let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
-                let body = new Ammo.btRigidBody( rbInfo );
+                boxBody = new Ammo.btRigidBody( rbInfo );
 
-                physicsWorld.addRigidBody( body );
+                physicsWorld.addRigidBody( boxBody );
                 
+                // set up pivot point
+                boxPivot = new Ammo.btVector3(5, 0, 0 );
             }
                     
-            function createCylinder()
+            function createCylinder() // function creates motor cylinder
             {
                 let pos = {x: 5, y: 3, z: 0};
                 let scale = {x: 1, y: 5, z: 1};
@@ -194,8 +235,7 @@
                 Cylinder.position.set(pos.x, pos.y, pos.z);
                 Cylinder.scale.set(scale.x, scale.y, scale.z);
                 Cylinder.rotation.set(quat.x, quat.y, quat.z, quat.w);
-                    
-                    
+                
                 Cylinder.castShadow = true;
                 Cylinder.receiveShadow = true;
 
@@ -224,9 +264,26 @@
                 physicsWorld.addRigidBody( cylinderBody );
                 Cylinder.userData.physicsBody = cylinderBody;
                 rigidBodies.push(Cylinder);
+                
+                // set up pivot point
+                cylinderPivot = new Ammo.btVector3( 0, 0 , 0);
+                
+                // define the joint between box and cylinder
+                let p2p = new Ammo.btPoint2PointConstraint( cylinderBody, boxBody, cylinderPivot, boxPivot);
+                physicsWorld.addConstraint( p2p, true );
+                
             }
-                            
-            function updatePhysics( deltaTime )
+       
+            function moveCylinder() // function rotates cylinder based on keyboard input
+            {
+                let scalingFactor = 1; // changes speed of rotation
+                let resultantImpulse = new Ammo.btVector3( moveDirection.up - moveDirection.down, 0, 0 ) // rotation vector
+                resultantImpulse.op_mul(scalingFactor);
+                let physicsBody = Cylinder.userData.physicsBody;
+                physicsBody.setAngularVelocity( resultantImpulse );
+            }
+                                                     
+            function updatePhysics( deltaTime ) // function refreshes physics
             {
                 // Step world
                 physicsWorld.stepSimulation( deltaTime, 10 );

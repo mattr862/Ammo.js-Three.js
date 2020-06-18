@@ -15,6 +15,7 @@
             let physicsWorld, scene, camera, renderer, rigidBodies = []
             let Cylinder = null
             const STATE = { DISABLE_DEACTIVATION : 4 }
+            let boxBody = null, cylinderBody = null, boxPivot = null, cylinderPivot = null
             
             //Ammojs Initialization
             Ammo().then( start )
@@ -175,10 +176,12 @@
                 colShape.calculateLocalInertia( mass, localInertia );
 
                 let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
-                let body = new Ammo.btRigidBody( rbInfo );
+                boxBody = new Ammo.btRigidBody( rbInfo );
 
-                physicsWorld.addRigidBody( body );
+                physicsWorld.addRigidBody( boxBody );
                 
+                // set up pivot point
+                boxPivot = new Ammo.btVector3(5, 0, 0 );
             }
                     
             function createCylinder()
@@ -194,7 +197,6 @@
                 Cylinder.position.set(pos.x, pos.y, pos.z);
                 Cylinder.scale.set(scale.x, scale.y, scale.z);
                 Cylinder.rotation.set(quat.x, quat.y, quat.z, quat.w);
-                    
                     
                 Cylinder.castShadow = true;
                 Cylinder.receiveShadow = true;
@@ -224,6 +226,14 @@
                 physicsWorld.addRigidBody( cylinderBody );
                 Cylinder.userData.physicsBody = cylinderBody;
                 rigidBodies.push(Cylinder);
+                
+                // set up pivot point
+                cylinderPivot = new Ammo.btVector3( 0, 0 , 0);
+                
+                // define the joint between box and cylinder
+                let p2p = new Ammo.btPoint2PointConstraint( cylinderBody, boxBody, cylinderPivot, boxPivot);
+                physicsWorld.addConstraint( p2p, true );
+
             }
                             
             function updatePhysics( deltaTime )
