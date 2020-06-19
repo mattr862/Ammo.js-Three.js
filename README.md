@@ -1,9 +1,9 @@
 # Ammo.js / Three.js
-A list of resources for working with Ammo.js and Three.js. Developed for a Queen's University QLAB project with the aim of creating a robotic arm simulation. My part of the project is focusing on modelling the motors physics.
+A list of resources for working with Ammo.js and Three.js. Developed for a Queen's University QLAB project with the aim of creating a robotic arm simulation. My part of the project is focusing on modelling the motors physics. The larger project can be found here: https://github.com/MarkMegarry/QLAB-Robotics-Simulation
 
-If you haven't worked with Ammo.js / Three.js before i'd recommend checking out my PDF guide for setting it up - "Setting up Ammo.js / Three.j"
+If you haven't worked with Ammo.js / Three.js before i'd recommend checking out my PDF guide for setting it up - "Setting up Ammo.js / Three.j". see blank folder for the code.
 
-The development process of my motor sim code is outlined within my motor modelling PDF "Motor modelling in Ammo.js / Three.js".
+The development process of my motor sim code is outlined within my motor modelling PDF - "Motor modelling in Ammo.js / Three.js". see motor modelling folder for the code.
 This document details -
 1. Three.js Modelling / Ammo.js Meshes
 2. Joint constraints
